@@ -1,6 +1,7 @@
 {
-  "defaultHomeserver": 2,
+  "defaultHomeserver": 0,
   "homeserverList": [
+    "matrix.lhctv.dev",
     "converser.eu",
     "envs.net",
     "matrix.org",

@@ -66,7 +66,8 @@ export const getWidgetUrl = (
   });
 
   const replacedParams = params.toString().replace(/%24/g, '$');
-  url.search = `?${replacedParams}`;
+  url.search = ``;
+  url.hash = `#/room?${replacedParams}`;
 
   logger.info('Generated Element Call Widget URL:', url.toString());
   return url;

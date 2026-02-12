@@ -321,11 +321,7 @@ export function RoomViewHeader() {
                 src={avatarUrl}
                 alt={name}
                 renderFallback={() => (
-                  <RoomIcon
-                    size="200"
-                    joinRule={room.getJoinRule() ?? JoinRule.Restricted}
-                    filled
-                  />
+                  <RoomIcon size="200" joinRule={room.getJoinRule()} roomType={room.getType()} />
                 )}
               />
             </Avatar>

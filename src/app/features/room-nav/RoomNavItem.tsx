@@ -366,7 +366,8 @@ export function RoomNavItem({
                     filled={selected || isActiveCall}
                     size="100"
                     joinRule={room.getJoinRule()}
-                    call={room.isCallRoom()}
+                    roomType={room.getType()}
+                    locked={room.isCallRoom() && !canJoinCall}
                   />
                 )}
               </Avatar>

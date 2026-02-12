@@ -202,13 +202,7 @@ function RoomProfile({
           roomId={roomId}
           src={avatarUrl}
           alt={name}
-          renderFallback={() => (
-            <RoomIcon
-              size="300"
-              joinRule={joinRule ?? JoinRule.Restricted}
-              call={roomType === RoomType.Call}
-            />
-          )}
+          renderFallback={() => <RoomIcon size="300" joinRule={joinRule} roomType={roomType} />}
         />
       </Avatar>
       <Box grow="Yes" direction="Column">

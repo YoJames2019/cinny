@@ -1,4 +1,4 @@
-import { Room } from 'matrix-js-sdk';
+import { EventType, Room } from 'matrix-js-sdk';
 import React, {
   useContext,
   useCallback,
@@ -21,6 +21,9 @@ import { useRoomNavigate } from '../../hooks/useRoomNavigate';
 import { getMemberDisplayName } from '../../utils/room';
 import { getMxIdLocalPart } from '../../utils/matrix';
 import * as css from './CallView.css';
+import { useRoomPermissions } from '../../hooks/useRoomPermissions';
+import { useRoomCreators } from '../../hooks/useRoomCreators';
+import { usePowerLevelsContext } from '../../hooks/usePowerLevels';
 
 type OriginalStyles = {
   position?: string;
@@ -56,6 +59,12 @@ export function CallView({ room }: { room: Room }) {
   const mx = useMatrixClient();
 
   const [visibleCallNames, setVisibleCallNames] = useState('');
+
+  const powerLevels = usePowerLevelsContext();
+  const creators = useRoomCreators(room);
+
+  const permissions = useRoomPermissions(creators, powerLevels);
+  const canJoin = permissions.event(EventType.GroupCallMemberPrefix, mx.getSafeUserId());
 
   const {
     isActiveCallReady,
@@ -160,6 +169,8 @@ export function CallView({ room }: { room: Room }) {
   ]);
 
   const handleJoinVCClick: MouseEventHandler<HTMLElement> = (evt) => {
+    if (!canJoin) return;
+
     if (isMobile) {
       evt.stopPropagation();
       setViewedCallRoomId(room.roomId);
@@ -210,11 +221,7 @@ export function CallView({ room }: { room: Room }) {
       >
         <CallViewUserGrid>
           {callMembers.slice(0, 6).map((callMember) => (
-            <CallViewUser
-              key={callMember.membershipID}
-              room={room}
-              callMembership={callMember}
-            />
+            <CallViewUser key={callMember.membershipID} room={room} callMembership={callMember} />
           ))}
         </CallViewUserGrid>
 
@@ -238,14 +245,18 @@ export function CallView({ room }: { room: Room }) {
             {memberDisplayNames.length > 1 ? 'are' : 'is'} currently in voice
           </Text>
         </Box>
-        <Button variant="Secondary" disabled={isActiveCallRoom} onClick={handleJoinVCClick}>
+        <Button
+          variant="Secondary"
+          disabled={!canJoin || isActiveCallRoom}
+          onClick={handleJoinVCClick}
+        >
           {isActiveCallRoom ? (
             <Box justifyContent="Center" alignItems="Center" gap="200">
               <Spinner />
               <Text size="B500">{activeCallRoomId === room.roomId ? `Joining` : 'Join Voice'}</Text>
             </Box>
           ) : (
-            <Text size="B500">Join Voice</Text>
+            <Text size="B500">{canJoin ? 'Join Voice' : 'Channel Locked'}</Text>
           )}
         </Button>
       </Box>

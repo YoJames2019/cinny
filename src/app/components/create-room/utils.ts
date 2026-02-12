@@ -82,6 +82,12 @@ export const createRoomEncryptionState = () => ({
   },
 });
 
+export const createRoomCallState = () => ({
+  type: "org.matrix.msc3401.call",
+  state_key: "",
+  content: {}
+})
+
 export type CreateRoomData = {
   version: string;
   type?: RoomType;
@@ -104,6 +110,10 @@ export const createRoom = async (mx: MatrixClient, data: CreateRoomData): Promis
 
   if (data.parent) {
     initialState.push(createRoomParentState(data.parent));
+  }
+
+  if (data.type === RoomType.Call){
+    initialState.push(createRoomCallState())
   }
 
   initialState.push(createRoomJoinRulesState(data.kind, data.parent, data.knock));

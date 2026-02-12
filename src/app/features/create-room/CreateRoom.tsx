@@ -194,12 +194,7 @@ export function CreateRoomForm({ defaultKind, space, onCreate }: CreateRoomFormP
           title="Call Room"
           description="Enable this to create a room optimized for voice calls."
           after={
-            <Switch
-              variant="Primary"
-              value={callRoom}
-              onChange={setCallRoom}
-              disabled={disabled}
-            />
+            <Switch variant="Primary" value={callRoom} onChange={setCallRoom} disabled={disabled} />
           }
         />
       </SequenceCard>

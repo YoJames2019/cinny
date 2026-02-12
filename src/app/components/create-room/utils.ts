@@ -84,33 +84,42 @@ export const createRoomEncryptionState = () => ({
 });
 
 export const createRoomCallState = () => ({
-  type: "org.matrix.msc3401.call",
-  state_key: "",
-  content: {}
-})
+  type: 'org.matrix.msc3401.call',
+  state_key: '',
+  content: {},
+});
 
-export const createPowerLevelContentOverrides = (base: IPowerLevels, overrides: Partial<IPowerLevels>): IPowerLevels => ({
+export const createPowerLevelContentOverrides = (
+  base: IPowerLevels,
+  overrides: Partial<IPowerLevels>
+): IPowerLevels => ({
   ...base,
   ...overrides,
-  ...(base.events || overrides.events ? {
-    events: {
-      ...base.events,
-      ...overrides.events,
-    }
-  } : {}),
-  ...(base.users || overrides.users ? {
-    users: {
-      ...base.users,
-      ...overrides.users,
-    }
-  } : {}),
-  ...(base.notifications || overrides.notifications ? {
-    notifications: {
-    ...base.notifications,
-    ...overrides.notifications
-    }
-  } : {})
-})
+  ...(base.events || overrides.events
+    ? {
+        events: {
+          ...base.events,
+          ...overrides.events,
+        },
+      }
+    : {}),
+  ...(base.users || overrides.users
+    ? {
+        users: {
+          ...base.users,
+          ...overrides.users,
+        },
+      }
+    : {}),
+  ...(base.notifications || overrides.notifications
+    ? {
+        notifications: {
+          ...base.notifications,
+          ...overrides.notifications,
+        },
+      }
+    : {}),
+});
 
 export type CreateRoomData = {
   version: string;
@@ -124,7 +133,7 @@ export type CreateRoomData = {
   knock: boolean;
   allowFederation: boolean;
   additionalCreators?: string[];
-  powerLevelContentOverrides?: IPowerLevels
+  powerLevelContentOverrides?: IPowerLevels;
 };
 export const createRoom = async (mx: MatrixClient, data: CreateRoomData): Promise<string> => {
   const initialState: ICreateRoomStateEvent[] = [];
@@ -137,8 +146,8 @@ export const createRoom = async (mx: MatrixClient, data: CreateRoomData): Promis
     initialState.push(createRoomParentState(data.parent));
   }
 
-  if (data.type === RoomType.Call){
-    initialState.push(createRoomCallState())
+  if (data.type === RoomType.Call) {
+    initialState.push(createRoomCallState());
   }
 
   initialState.push(createRoomJoinRulesState(data.kind, data.parent, data.knock));
@@ -171,11 +180,14 @@ export const createRoom = async (mx: MatrixClient, data: CreateRoomData): Promis
     );
   }
 
-  if(data.powerLevelContentOverrides) {
-    const roomPowers = await mx.getStateEvent(result.room_id, StateEvent.RoomPowerLevels, "")
-    const updatedPowers = createPowerLevelContentOverrides(roomPowers, data.powerLevelContentOverrides)
+  if (data.powerLevelContentOverrides) {
+    const roomPowers = await mx.getStateEvent(result.room_id, StateEvent.RoomPowerLevels, '');
+    const updatedPowers = createPowerLevelContentOverrides(
+      roomPowers,
+      data.powerLevelContentOverrides
+    );
 
-    await mx.sendStateEvent(result.room_id, StateEvent.RoomPowerLevels as any, updatedPowers, "")
+    await mx.sendStateEvent(result.room_id, StateEvent.RoomPowerLevels as any, updatedPowers, '');
   }
 
   return result.room_id;

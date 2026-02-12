@@ -256,41 +256,44 @@ export const getUnreadInfos = (mx: MatrixClient): UnreadInfo[] => {
   return unreadInfos;
 };
 
-export const getRoomIconSrc = (icons: Record<IconName, IconSrc>, roomType?: string, joinRule?: JoinRule, locked?: boolean): IconSrc => {
-
+export const getRoomIconSrc = (
+  icons: Record<IconName, IconSrc>,
+  roomType?: string,
+  joinRule?: JoinRule,
+  locked?: boolean
+): IconSrc => {
   type RoomIcons = {
-    base: IconSrc,
-    locked: IconSrc,
-    public: IconSrc,
-  }
+    base: IconSrc;
+    locked: IconSrc;
+    public: IconSrc;
+  };
 
   const roomTypeIcons: Record<string, RoomIcons> = {
     [RoomType.Call]: {
       base: icons.VolumeHigh,
       locked: icons.Lock,
-      public: icons.VolumeHigh
+      public: icons.VolumeHigh,
     },
     [RoomType.Space]: {
       base: icons.Space,
       locked: icons.SpaceLock,
-      public: icons.SpaceGlobe
+      public: icons.SpaceGlobe,
     },
     default: {
       base: icons.Hash,
       locked: icons.HashLock,
-      public: icons.HashGlobe
-    }
-  }
-  
-  const roomIcons = roomTypeIcons[roomType ?? "default"] ?? roomTypeIcons.default
+      public: icons.HashGlobe,
+    },
+  };
+
+  const roomIcons = roomTypeIcons[roomType ?? 'default'] ?? roomTypeIcons.default;
 
   let roomIcon = roomIcons.base;
 
-  if(locked) {
+  if (locked) {
     roomIcon = roomIcons.locked;
-  }
-  else {
-    switch(joinRule) {
+  } else {
+    switch (joinRule) {
       case JoinRule.Invite:
       case JoinRule.Knock:
         roomIcon = roomIcons.locked;
@@ -307,7 +310,7 @@ export const getRoomIconSrc = (icons: Record<IconName, IconSrc>, roomType?: stri
   }
 
   return roomIcon;
-}
+};
 
 export const getRoomAvatarUrl = (
   mx: MatrixClient,

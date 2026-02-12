@@ -11,6 +11,7 @@ import { CreateRoomKind } from './CreateRoomKindSelector';
 import { RoomType, StateEvent } from '../../../types/matrix/room';
 import { getViaServers } from '../../plugins/via-servers';
 import { getMxIdServer } from '../../utils/matrix';
+import { IPowerLevels } from '../../hooks/usePowerLevels';
 
 export const createRoomCreationContent = (
   type: RoomType | undefined,
@@ -88,6 +89,29 @@ export const createRoomCallState = () => ({
   content: {}
 })
 
+export const createPowerLevelContentOverrides = (base: IPowerLevels, overrides: Partial<IPowerLevels>): IPowerLevels => ({
+  ...base,
+  ...overrides,
+  ...(base.events || overrides.events ? {
+    events: {
+      ...base.events,
+      ...overrides.events,
+    }
+  } : {}),
+  ...(base.users || overrides.users ? {
+    users: {
+      ...base.users,
+      ...overrides.users,
+    }
+  } : {}),
+  ...(base.notifications || overrides.notifications ? {
+    notifications: {
+    ...base.notifications,
+    ...overrides.notifications
+    }
+  } : {})
+})
+
 export type CreateRoomData = {
   version: string;
   type?: RoomType;
@@ -100,6 +124,7 @@ export type CreateRoomData = {
   knock: boolean;
   allowFederation: boolean;
   additionalCreators?: string[];
+  powerLevelContentOverrides?: IPowerLevels
 };
 export const createRoom = async (mx: MatrixClient, data: CreateRoomData): Promise<string> => {
   const initialState: ICreateRoomStateEvent[] = [];
@@ -144,6 +169,13 @@ export const createRoom = async (mx: MatrixClient, data: CreateRoomData): Promis
       },
       result.room_id
     );
+  }
+
+  if(data.powerLevelContentOverrides) {
+    const roomPowers = await mx.getStateEvent(result.room_id, StateEvent.RoomPowerLevels, "")
+    const updatedPowers = createPowerLevelContentOverrides(roomPowers, data.powerLevelContentOverrides)
+
+    await mx.sendStateEvent(result.room_id, StateEvent.RoomPowerLevels as any, updatedPowers, "")
   }
 
   return result.room_id;

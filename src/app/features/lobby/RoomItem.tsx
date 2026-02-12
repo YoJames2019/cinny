@@ -30,7 +30,7 @@ import { LocalRoomSummaryLoader } from '../../components/RoomSummaryLoader';
 import { UseStateProvider } from '../../components/UseStateProvider';
 import { RoomTopicViewer } from '../../components/room-topic-viewer';
 import { onEnterOrSpace, stopPropagation } from '../../utils/keyboard';
-import { Membership } from '../../../types/matrix/room';
+import { Membership, RoomType } from '../../../types/matrix/room';
 import * as css from './RoomItem.css';
 import * as styleCss from './style.css';
 import { AsyncStatus, useAsyncCallback } from '../../hooks/useAsyncCallback';
@@ -175,6 +175,7 @@ function RoomProfileError({ roomId, suggested, inaccessibleRoom, via }: RoomProf
 
 type RoomProfileProps = {
   roomId: string;
+  roomType?: string;
   name: string;
   topic?: string;
   avatarUrl?: string;
@@ -185,6 +186,7 @@ type RoomProfileProps = {
 };
 function RoomProfile({
   roomId,
+  roomType,
   name,
   topic,
   avatarUrl,
@@ -201,7 +203,11 @@ function RoomProfile({
           src={avatarUrl}
           alt={name}
           renderFallback={() => (
-            <RoomIcon size="300" joinRule={joinRule ?? JoinRule.Restricted} filled />
+            <RoomIcon
+              size="300"
+              joinRule={joinRule ?? JoinRule.Restricted}
+              call={roomType === RoomType.Call}
+            />
           )}
         />
       </Avatar>
@@ -338,6 +344,7 @@ export const RoomItemCard = as<'div', RoomItemCardProps>(
               {(localSummary) => (
                 <RoomProfile
                   roomId={roomId}
+                  roomType={localSummary.roomType}
                   name={localSummary.name}
                   topic={localSummary.topic}
                   avatarUrl={
@@ -396,6 +403,7 @@ export const RoomItemCard = as<'div', RoomItemCardProps>(
               {summary && (
                 <RoomProfile
                   roomId={roomId}
+                  roomType={summary.room_type}
                   name={summary.name || summary.canonical_alias || roomId}
                   topic={summary.topic}
                   avatarUrl={

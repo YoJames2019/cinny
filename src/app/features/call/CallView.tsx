@@ -24,6 +24,7 @@ import * as css from './CallView.css';
 import { useRoomPermissions } from '../../hooks/useRoomPermissions';
 import { useRoomCreators } from '../../hooks/useRoomCreators';
 import { usePowerLevelsContext } from '../../hooks/usePowerLevels';
+import { useRoomName } from '../../hooks/useRoomMeta';
 
 type OriginalStyles = {
   position?: string;
@@ -63,6 +64,7 @@ export function CallView({ room }: { room: Room }) {
   const powerLevels = usePowerLevelsContext();
   const creators = useRoomCreators(room);
 
+  const roomName = useRoomName(room);
   const permissions = useRoomPermissions(creators, powerLevels);
   const canJoin = permissions.event(EventType.GroupCallMemberPrefix, mx.getSafeUserId());
 
@@ -238,7 +240,7 @@ export function CallView({ room }: { room: Room }) {
               paddingBottom: config.space.S300,
             }}
           >
-            {room.name}
+            {roomName}
           </Text>
           <Text size="T200">
             {visibleCallNames !== '' ? visibleCallNames : 'No one'}{' '}

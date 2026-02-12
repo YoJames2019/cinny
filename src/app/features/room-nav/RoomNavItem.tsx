@@ -59,6 +59,7 @@ import { useCallMembers } from '../../hooks/useCallMemberships';
 import { useRoomNavigate } from '../../hooks/useRoomNavigate';
 import { ScreenSize, useScreenSizeContext } from '../../hooks/useScreenSize';
 import { RoomNavUser } from './RoomNavUser';
+import { useRoomName } from '../../hooks/useRoomMeta';
 
 type RoomNavItemMenuProps = {
   room: Room;
@@ -260,6 +261,7 @@ export function RoomNavItem({
 
   const powerLevels = usePowerLevels(room);
   const creators = useRoomCreators(room);
+  const roomName = useRoomName(room);
 
   const permissions = useRoomPermissions(creators, powerLevels);
   const canJoinCall = permissions.event(EventType.GroupCallMemberPrefix, mx.getSafeUserId());
@@ -313,7 +315,7 @@ export function RoomNavItem({
 
   const optionsVisible = hover || !!menuAnchor;
   const ariaLabel = [
-    room.name,
+    roomName,
     room.isCallRoom()
       ? [
           'Call Room',
@@ -351,10 +353,10 @@ export function RoomNavItem({
                         ? getDirectRoomAvatarUrl(mx, room, 96, useAuthentication)
                         : getRoomAvatarUrl(mx, room, 96, useAuthentication)
                     }
-                    alt={room.name}
+                    alt={roomName}
                     renderFallback={() => (
                       <Text as="span" size="H6">
-                        {nameInitials(room.name)}
+                        {nameInitials(roomName)}
                       </Text>
                     )}
                   />
@@ -378,7 +380,7 @@ export function RoomNavItem({
                   size="Inherit"
                   truncate
                 >
-                  {room.name}
+                  {roomName}
                 </Text>
               </Box>
               {!optionsVisible && !unread && !selected && typingMember.length > 0 && (

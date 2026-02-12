@@ -256,26 +256,58 @@ export const getUnreadInfos = (mx: MatrixClient): UnreadInfo[] => {
   return unreadInfos;
 };
 
-export const joinRuleToIconSrc = (
-  icons: Record<IconName, IconSrc>,
-  joinRule: JoinRule,
-  space: boolean,
-  call: boolean
-): IconSrc | undefined => {
-  if (joinRule === JoinRule.Restricted) {
-    return space ? icons.Space : call ? icons.VolumeHigh : icons.Hash;
+export const getRoomIconSrc = (icons: Record<IconName, IconSrc>, roomType?: string, joinRule?: JoinRule, locked?: boolean): IconSrc => {
+
+  type RoomIcons = {
+    base: IconSrc,
+    locked: IconSrc,
+    public: IconSrc,
   }
-  if (joinRule === JoinRule.Knock) {
-    return space ? icons.SpaceLock : call ? icons.VolumeHigh : icons.HashLock;
+
+  const roomTypeIcons: Record<string, RoomIcons> = {
+    [RoomType.Call]: {
+      base: icons.VolumeHigh,
+      locked: icons.Lock,
+      public: icons.VolumeHigh
+    },
+    [RoomType.Space]: {
+      base: icons.Space,
+      locked: icons.SpaceLock,
+      public: icons.SpaceGlobe
+    },
+    default: {
+      base: icons.Hash,
+      locked: icons.HashLock,
+      public: icons.HashGlobe
+    }
   }
-  if (joinRule === JoinRule.Invite) {
-    return space ? icons.SpaceLock : call ? icons.VolumeHigh : icons.HashLock;
+  
+  const roomIcons = roomTypeIcons[roomType ?? "default"] ?? roomTypeIcons.default
+
+  let roomIcon = roomIcons.base;
+
+  if(locked) {
+    roomIcon = roomIcons.locked;
   }
-  if (joinRule === JoinRule.Public) {
-    return space ? icons.SpaceGlobe : call ? icons.VolumeHigh : icons.HashGlobe;
+  else {
+    switch(joinRule) {
+      case JoinRule.Invite:
+      case JoinRule.Knock:
+        roomIcon = roomIcons.locked;
+        break;
+      case JoinRule.Restricted:
+        roomIcon = roomIcons.base;
+        break;
+      case JoinRule.Public:
+        roomIcon = roomIcons.public;
+        break;
+      default:
+        break;
+    }
   }
-  return undefined;
-};
+
+  return roomIcon;
+}
 
 export const getRoomAvatarUrl = (
   mx: MatrixClient,

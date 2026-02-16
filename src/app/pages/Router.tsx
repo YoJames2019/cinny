@@ -70,6 +70,7 @@ import { SearchModalRenderer } from '../features/search';
 import { getFallbackSession } from '../state/sessions';
 import { CallProvider } from './client/call/CallProvider';
 import { PersistentCallContainer } from './client/call/PersistentCallContainer';
+import { pushSessionToSW } from '../../sw-session';
 
 export const createRouter = (clientConfig: ClientConfig, screenSize: ScreenSize) => {
   const { hashRouter } = clientConfig;
@@ -108,7 +109,8 @@ export const createRouter = (clientConfig: ClientConfig, screenSize: ScreenSize)
 
       <Route
         loader={() => {
-          if (!getFallbackSession()) {
+          const session = getFallbackSession();
+          if (!session) {
             const afterLoginPath = getAppPathFromHref(
               getOriginBaseUrl(hashRouter),
               window.location.href
@@ -116,6 +118,7 @@ export const createRouter = (clientConfig: ClientConfig, screenSize: ScreenSize)
             if (afterLoginPath) setAfterLoginRedirectPath(afterLoginPath);
             return redirect(getLoginPath());
           }
+          pushSessionToSW(session.baseUrl, session.accessToken);
           return null;
         }}
         element={

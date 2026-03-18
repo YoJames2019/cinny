@@ -1,7 +1,8 @@
 import { useAtomValue } from 'jotai';
 import React, { ReactNode, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RoomEvent, RoomEventHandlerMap } from 'matrix-js-sdk';
+import { IContent, RoomEvent, RoomEventHandlerMap } from 'matrix-js-sdk';
+import { CryptoBackend } from 'matrix-js-sdk/lib/common-crypto/CryptoBackend';
 import { roomToUnreadAtom, unreadEqual, unreadInfoToUnread } from '../../state/room/roomToUnread';
 import LogoSVG from '../../../../public/res/svg/cinny.svg';
 import LogoUnreadSVG from '../../../../public/res/svg/cinny-unread.svg';
@@ -20,6 +21,7 @@ import {
   getNotificationType,
   getUnreadInfo,
   isNotificationEvent,
+  getRoomToParents,
 } from '../../utils/room';
 import { NotificationType, UnreadInfo } from '../../../types/matrix/room';
 import { getMxIdLocalPart, mxcUrlToHttp } from '../../utils/matrix';
@@ -144,21 +146,38 @@ function MessageNotifications() {
   const notify = useCallback(
     ({
       roomName,
+      parentSpaceName,
       roomAvatar,
       username,
+      content,
     }: {
       roomName: string;
+      parentSpaceName?: string;
       roomAvatar?: string;
       username: string;
       roomId: string;
       eventId: string;
+      content: IContent;
     }) => {
-      const noti = new window.Notification(roomName, {
-        icon: roomAvatar,
-        badge: roomAvatar,
-        body: `New inbox notification from ${username}`,
-        silent: true,
-      });
+      const sourcePath = [];
+
+      if (roomName) {
+        sourcePath.push(`#${roomName}`);
+      }
+
+      if (parentSpaceName) {
+        sourcePath.push(parentSpaceName);
+      }
+
+      const noti = new window.Notification(
+        `${username} ${sourcePath.length > 0 ? `(${sourcePath.join(', ')})` : ''}`,
+        {
+          icon: roomAvatar,
+          badge: roomAvatar,
+          body: `${content}`,
+          silent: true,
+        }
+      );
 
       noti.onclick = () => {
         if (!window.closed) navigate(getInboxNotificationsPath());
@@ -178,7 +197,7 @@ function MessageNotifications() {
   }, []);
 
   useEffect(() => {
-    const handleTimelineEvent: RoomEventHandlerMap[RoomEvent.Timeline] = (
+    const handleTimelineEvent: RoomEventHandlerMap[RoomEvent.Timeline] = async (
       mEvent,
       room,
       toStartOfTimeline,
@@ -213,16 +232,30 @@ function MessageNotifications() {
       }
 
       if (showNotifications && notificationPermission('granted')) {
+        if (mEvent.isEncrypted()) {
+          await mEvent.attemptDecryption(mx.getCrypto() as CryptoBackend, { isRetry: true });
+        }
+
+        const parentIds = getRoomToParents(mx).get(room.roomId);
+
+        const parentId = [...(parentIds ?? [])][0];
+
+        let parentSummary;
+
+        if (parentId) parentSummary = await mx.getRoomSummary(parentId ?? '');
+
         const avatarMxc =
           room.getAvatarFallbackMember()?.getMxcAvatarUrl() ?? room.getMxcAvatarUrl();
         notify({
           roomName: room.name ?? 'Unknown',
+          parentSpaceName: parentSummary?.name,
           roomAvatar: avatarMxc
             ? mxcUrlToHttp(mx, avatarMxc, useAuthentication, 96, 96, 'crop') ?? undefined
             : undefined,
           username: getMemberDisplayName(room, sender) ?? getMxIdLocalPart(sender) ?? sender,
           roomId: room.roomId,
           eventId,
+          content: mEvent.getContent()?.body ?? 'No Text Content',
         });
       }
 
